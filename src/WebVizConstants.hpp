@@ -56,4 +56,9 @@ static const std::string point_cloud_topic = "pointcloud";
  * @brief (amrl_msgs/VisualizationMsg) Visualization data
  */
 static const std::string visualization_topic = "visualization";
+
+/**
+ * @brief (amrl_msgs/SensorStatus) ouster_status
+ */
+static const std::string ouster_status_topic = "ouster_status";
 }  // namespace webviz_constants

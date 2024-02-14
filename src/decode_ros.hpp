@@ -12,6 +12,7 @@
 #include <amrl_msgs/VisualizationMsg.h>
 #include <amrl_msgs/ElevatorStatus.h>
 #include <amrl_msgs/ErrorReport.h>
+#include <amrl_msgs/SensorStatus.h>
 #include <flatbuffers/flatbuffers.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovariance.h>
@@ -202,6 +203,21 @@ amrl_msgs::Localization2DMsg decode(
   dst.pose.x = src->pose()->x();
   dst.pose.y = src->pose()->y();
   dst.pose.theta = src->pose()->theta();
+  return dst;
+}
+
+template <>
+struct flatbuffers_type_for<amrl_msgs::SensorStatus> {
+  typedef fb::amrl_msgs::SensorStatus type;
+};
+template <>
+amrl_msgs::SensorStatus decode(
+    const fb::amrl_msgs::SensorStatus* const src) {
+  amrl_msgs::SensorStatus dst;
+  dst.header = decode<std_msgs::Header>(src->header());
+  dst.frequency = src->frequency();
+  dst.std = src->std();
+  dst.packet_size = src->packet_size();
   return dst;
 }
 

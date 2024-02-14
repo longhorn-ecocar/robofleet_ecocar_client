@@ -4,6 +4,7 @@
 #include <amrl_msgs/RobofleetStatus.h>
 #include <amrl_msgs/RobofleetSubscription.h>
 #include <amrl_msgs/VisualizationMsg.h>
+#include <amrl_msgs/SensorStatus.h>
 #include <flatbuffers/flatbuffers.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -200,6 +201,18 @@ flatbuffers::uoffset_t encode(
 
   return fb::amrl_msgs::CreateLocalization2DMsgDirect(
              fbb, metadata, header, pose, msg.map.c_str())
+      .o;
+}
+
+// amrl_msgs/SensorStatus
+template <>
+flatbuffers::uoffset_t encode(
+    FBB& fbb, const amrl_msgs::SensorStatus& msg,
+    const MetadataOffset& metadata) {
+  auto header = encode(fbb, msg.header, 0);
+
+  return fb::amrl_msgs::CreateSensorStatus(
+             fbb, metadata, header, msg.frequency, msg.std, msg.packet_size)
       .o;
 }
 

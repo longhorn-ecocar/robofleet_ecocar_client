@@ -15,9 +15,15 @@ def talker():
     Localization2DMsg = get_message_class("amrl_msgs/Localization2DMsg")
     Odometry = get_message_class("nav_msgs/Odometry")
 
+    # ecocar data classes
+    SensorStatus = get_message_class("amrl_msgs/SensorStatus")
+
     status_pub = rospy.Publisher("status", RobofleetStatus, queue_size=1)
     odom_pub = rospy.Publisher("odometry/raw", Odometry, queue_size=1)
     loc_pub = rospy.Publisher("localization", Localization2DMsg, queue_size=1)
+
+    # ecocar publishers
+    ouster_status_pub = rospy.Publisher('/ouster/health', SensorStatus, queue_size=1)
 
     rospy.init_node("test_publisher", anonymous=True)
     rate = rospy.Rate(15)
@@ -44,10 +50,20 @@ def talker():
         loc.pose.y = math.cos(t / 50) * -100 - 100
         loc.pose.theta = t / 10
 
+        # ecocar data
+        ouster_status = SensorStatus()
+        ouster_status.frequency = 10
+        ouster_status.std = 10
+        ouster_status.packet_size = 10
+
         rospy.loginfo("publishing")
         status_pub.publish(rf_status)
         odom_pub.publish(odom)
         loc_pub.publish(loc)
+
+        # ecocar publishers
+        ouster_status_pub.publish(ouster_status)
+
         rate.sleep()
 
 if __name__ == '__main__':
