@@ -4,6 +4,8 @@ import random
 import rospy
 from roslib.message import get_message_class
 
+from sensor_msgs.msg import CompressedImage
+
 seed = random.random() * 100000
 
 def talker():
@@ -17,14 +19,22 @@ def talker():
 
     # ecocar data classes
     SensorStatus = get_message_class("amrl_msgs/SensorStatus")
+    SensorHealth = get_message_class("amrl_msgs/SensorHealth")
+    SystemHealth = get_message_class("amrl_msgs/SystemHealth")
+    SystemLog = get_message_class("amrl_msgs/SystemLog")
+    CACCStatus = get_message_class("amrl_msgs/CACCStatus")
 
     status_pub = rospy.Publisher("status", RobofleetStatus, queue_size=1)
     odom_pub = rospy.Publisher("odometry/raw", Odometry, queue_size=1)
     loc_pub = rospy.Publisher("localization", Localization2DMsg, queue_size=1)
 
     # ecocar publishers
-    ouster_status_pub = rospy.Publisher('/ouster/health', SensorStatus, queue_size=1)
-
+    sensor_health_pub = rospy.Publisher('/leva/sensorhealth', SensorHealth, queue_size=1)
+    system_health_pub = rospy.Publisher('/leva/systemhealth', SystemHealth, queue_size=1)
+    system_log_pub = rospy.Publisher('/leva/systemlog', SystemLog, queue_size=1)
+    cacc_status_pub = rospy.Publisher('/leva/caccstatus', CACCStatus, queue_size=1)
+    image_pub = rospy.Publisher('/leva/birdseyeview/image_raw/compressed', CompressedImage, queue_size=1)
+    
     rospy.init_node("test_publisher", anonymous=True)
     rate = rospy.Rate(15)
     while not rospy.is_shutdown():
@@ -51,10 +61,49 @@ def talker():
         loc.pose.theta = t / 10
 
         # ecocar data
+        # ouster status
         ouster_status = SensorStatus()
+        ouster_status.sensorid = "ouster"
         ouster_status.frequency = 10
         ouster_status.std = 10
         ouster_status.packet_size = 10
+        ouster_status.status = 1
+
+        # left camera status
+        left_camera_status = SensorStatus()
+        left_camera_status.sensorid = "left_camera"
+        left_camera_status.frequency = 10
+        left_camera_status.std = 10
+        left_camera_status.packet_size = 10
+        left_camera_status.status = 1
+
+        # right camera status
+        right_camera_status = SensorStatus()
+        right_camera_status.sensorid = "left_camera"
+        right_camera_status.frequency = 10
+        right_camera_status.std = 10
+        right_camera_status.packet_size = 10
+        right_camera_status.status = 1
+
+        # sensor health
+        sensor_health_status = SensorHealth()
+        sensor_health_status.healths = [ouster_status, left_camera_status, right_camera_status]
+
+        # system health
+        system_health_status = SystemHealth()
+        system_health_status.pcm_propulsion = 1
+        system_health_status.pcm_highvoltage = 1
+        system_health_status.cav_longitudinal = 1
+        system_health_status.cav_lateral = 1
+        system_health_status.cav_v2x = 1
+
+        # system log
+        system_log_status = SystemLog()
+        system_log_status.log = "Hello World"
+
+        # CACCStatus
+        cacc_status_status = CACCStatus()
+        cacc_status_status.status = 1
 
         rospy.loginfo("publishing")
         status_pub.publish(rf_status)
@@ -62,7 +111,10 @@ def talker():
         loc_pub.publish(loc)
 
         # ecocar publishers
-        ouster_status_pub.publish(ouster_status)
+        sensor_health_pub.publish(sensor_health_status)
+        system_health_pub.publish(system_health_status)
+        system_log_pub.publish(system_log_status)
+        cacc_status_pub.publish(cacc_status_status)
 
         rate.sleep()
 

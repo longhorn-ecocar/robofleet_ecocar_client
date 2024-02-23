@@ -3,7 +3,10 @@
 #include <amrl_msgs/RobofleetStatus.h>
 #include <amrl_msgs/RobofleetSubscription.h>
 #include <amrl_msgs/VisualizationMsg.h>
-#include <amrl_msgs/SensorStatus.h>
+#include <amrl_msgs/SensorHealth.h>
+#include <amrl_msgs/SystemHealth.h>
+#include <amrl_msgs/SystemLog.h>
+#include <amrl_msgs/CACCStatus.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/CompressedImage.h>
 #include <sensor_msgs/LaserScan.h>
@@ -108,11 +111,6 @@ static void configure_msg_types(RosClientNode& cn) {
                    .rate_limit_hz(10)
                    .priority(20));
 
-  cn.configure(SendLocalTopic<amrl_msgs::SensorStatus>()
-                   .from("/ouster/health")
-                   .to(webviz_constants::ouster_status_topic)
-                   .rate_limit_hz(10)
-                   .priority(20));
 
   cn.configure(SendLocalTopic<nav_msgs::Odometry>()
                    .from("/odometry/raw")
@@ -158,6 +156,27 @@ static void configure_msg_types(RosClientNode& cn) {
                    .from("initialpose")
                    .to("/initialpose"));
 
+  // ecocar
+  cn.configure(SendLocalTopic<amrl_msgs::SensorHealth>()
+                   .from("/leva/sensorhealth")
+                   .to(webviz_constants::sensor_health_topic)
+                   .rate_limit_hz(10)
+                   .priority(20));
+  cn.configure(SendLocalTopic<amrl_msgs::SystemHealth>()
+                   .from("/leva/systemhealth")
+                   .to(webviz_constants::system_health_topic)
+                   .rate_limit_hz(10)
+                   .priority(20));
+  cn.configure(SendLocalTopic<amrl_msgs::SystemLog>()
+                   .from("/leva/systemlog")
+                   .to(webviz_constants::system_log_topic)
+                   .rate_limit_hz(10)
+                   .priority(20));
+  cn.configure(SendLocalTopic<amrl_msgs::CACCStatus>()
+                   .from("/leva/caccstatus")
+                   .to(webviz_constants::cacc_status_topic)
+                   .rate_limit_hz(10)
+                   .priority(20));
   // Add additional topics to subscribe and publish here.
 }
 }  // namespace config

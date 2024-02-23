@@ -5,6 +5,10 @@
 #include <amrl_msgs/RobofleetSubscription.h>
 #include <amrl_msgs/VisualizationMsg.h>
 #include <amrl_msgs/SensorStatus.h>
+#include <amrl_msgs/SensorHealth.h>
+#include <amrl_msgs/SystemHealth.h>
+#include <amrl_msgs/SystemLog.h>
+#include <amrl_msgs/CACCStatus.h>
 #include <flatbuffers/flatbuffers.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -211,8 +215,59 @@ flatbuffers::uoffset_t encode(
     const MetadataOffset& metadata) {
   auto header = encode(fbb, msg.header, 0);
 
+
   return fb::amrl_msgs::CreateSensorStatus(
-             fbb, metadata, header, msg.frequency, msg.std, msg.packet_size)
+             fbb, metadata, header, fbb.CreateString(msg.sensorid), msg.frequency, msg.std, msg.packet_size, msg.status)
+      .o;
+}
+
+// amrl_msgs/SensorHealth
+template <>
+flatbuffers::uoffset_t encode(
+    FBB& fbb, const amrl_msgs::SensorHealth& msg,
+    const MetadataOffset& metadata) {
+  auto header = encode(fbb, msg.header, 0);
+
+  auto healths = encode_vector<amrl_msgs::SensorStatus>(fbb, 0, msg.healths);
+
+  return fb::amrl_msgs::CreateSensorHealth(
+             fbb, metadata, header, healths)
+      .o;
+}
+
+// amrl_msgs/SystemHealth
+template <>
+flatbuffers::uoffset_t encode(
+    FBB& fbb, const amrl_msgs::SystemHealth& msg,
+    const MetadataOffset& metadata) {
+  auto header = encode(fbb, msg.header, 0);
+
+  return fb::amrl_msgs::CreateSystemHealth(
+             fbb, metadata, header, msg.pcm_propulsion, msg.pcm_highvoltage, msg.cav_longitudinal, msg.cav_lateral, msg.cav_v2x)
+      .o;
+}
+
+// amrl_msgs/SystemLog
+template <>
+flatbuffers::uoffset_t encode(
+    FBB& fbb, const amrl_msgs::SystemLog& msg,
+    const MetadataOffset& metadata) {
+  auto header = encode(fbb, msg.header, 0);
+
+  return fb::amrl_msgs::CreateSystemLog(
+             fbb, metadata, header, fbb.CreateString(msg.log))
+      .o;
+}
+
+// amrl_msgs/CACCStatus
+template <>
+flatbuffers::uoffset_t encode(
+    FBB& fbb, const amrl_msgs::CACCStatus& msg,
+    const MetadataOffset& metadata) {
+  auto header = encode(fbb, msg.header, 0);
+
+  return fb::amrl_msgs::CreateCACCStatus(
+             fbb, metadata, header, msg.status)
       .o;
 }
 
