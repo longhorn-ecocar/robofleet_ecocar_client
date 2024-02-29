@@ -5,6 +5,8 @@ import rospy
 from roslib.message import get_message_class
 
 from sensor_msgs.msg import CompressedImage
+import cv2
+from cv_bridge import CvBridge
 
 seed = random.random() * 100000
 
@@ -34,9 +36,13 @@ def talker():
     system_log_pub = rospy.Publisher('/leva/systemlog', SystemLog, queue_size=1)
     cacc_status_pub = rospy.Publisher('/leva/caccstatus', CACCStatus, queue_size=1)
     image_pub = rospy.Publisher('/leva/birdseyeview/image_raw/compressed', CompressedImage, queue_size=1)
-    
+    image_filepath = 'images/BEVMockup.png'
+    bridge = CvBridge()
+
     rospy.init_node("test_publisher", anonymous=True)
-    rate = rospy.Rate(15)
+    rate = rospy.Rate(1)
+
+    curr = 0
     while not rospy.is_shutdown():
         t = rospy.get_time() + seed
 
@@ -67,7 +73,7 @@ def talker():
         ouster_status.frequency = 10
         ouster_status.std = 10
         ouster_status.packet_size = 10
-        ouster_status.status = 1
+        ouster_status.status = curr % 3 
 
         # left camera status
         left_camera_status = SensorStatus()
@@ -75,15 +81,20 @@ def talker():
         left_camera_status.frequency = 10
         left_camera_status.std = 10
         left_camera_status.packet_size = 10
-        left_camera_status.status = 1
+        left_camera_status.status = (curr + 1) % 3
 
         # right camera status
         right_camera_status = SensorStatus()
-        right_camera_status.sensorid = "left_camera"
+        right_camera_status.sensorid = "right_camera"
         right_camera_status.frequency = 10
         right_camera_status.std = 10
         right_camera_status.packet_size = 10
-        right_camera_status.status = 1
+        right_camera_status.status = (curr + 2) % 3
+
+        # live vehicle feed
+        cv_image = cv2.imread(image_filepath)
+        compressed_msg = bridge.cv2_to_compressed_imgmsg(cv_image)
+        compressed_msg.header.stamp = rospy.Time.now()
 
         # sensor health
         sensor_health_status = SensorHealth()
@@ -91,19 +102,21 @@ def talker():
 
         # system health
         system_health_status = SystemHealth()
-        system_health_status.pcm_propulsion = 1
-        system_health_status.pcm_highvoltage = 1
-        system_health_status.cav_longitudinal = 1
-        system_health_status.cav_lateral = 1
-        system_health_status.cav_v2x = 1
+        system_health_status.pcm_propulsion = (curr + 1) % 3
+        system_health_status.pcm_highvoltage = curr % 3
+        system_health_status.cav_longitudinal = (curr + 2) % 3
+        system_health_status.cav_lateral = (curr + 1) % 3
+        system_health_status.cav_v2x = curr % 3
 
         # system log
         system_log_status = SystemLog()
-        system_log_status.log = "Hello World"
+        system_log_status.log = "Hello World " + str(curr)
+
+        curr += 1
 
         # CACCStatus
         cacc_status_status = CACCStatus()
-        cacc_status_status.status = 1
+        cacc_status_status.status = curr % 3
 
         rospy.loginfo("publishing")
         status_pub.publish(rf_status)
@@ -115,6 +128,7 @@ def talker():
         system_health_pub.publish(system_health_status)
         system_log_pub.publish(system_log_status)
         cacc_status_pub.publish(cacc_status_status)
+        image_pub.publish(compressed_msg)
 
         rate.sleep()
 

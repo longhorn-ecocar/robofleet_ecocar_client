@@ -64,5 +64,6 @@ static const std::string system_health_topic = "system_health";
 static const std::string sensor_health_topic = "sensor_health";
 static const std::string cacc_status_topic = "cacc_status";
 static const std::string system_log_topic = "system_log";
+static const std::string image_topic = "birdseyeview_image";
 
 }  // namespace webviz_constants

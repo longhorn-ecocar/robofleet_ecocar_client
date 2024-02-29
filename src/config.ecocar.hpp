@@ -177,6 +177,11 @@ static void configure_msg_types(RosClientNode& cn) {
                    .to(webviz_constants::cacc_status_topic)
                    .rate_limit_hz(10)
                    .priority(20));
+  cn.configure(SendLocalTopic<sensor_msgs::CompressedImage>()
+                   .from("/leva/birdseyeview/image_raw/compressed")
+                   .to(webviz_constants::image_topic)
+                   .rate_limit_hz(10)
+                   .priority(1));
   // Add additional topics to subscribe and publish here.
 }
 }  // namespace config
