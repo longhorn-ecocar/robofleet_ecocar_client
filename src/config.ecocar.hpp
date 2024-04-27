@@ -17,6 +17,8 @@
 
 #include <string>
 
+#include <cstdlib>
+
 #include "RosClientNode.hpp"
 #include "WebVizConstants.hpp"
 #include "topic_config.hpp"
@@ -27,7 +29,8 @@ namespace config {
 static const std::string ros_node_name = "robofleet_client";
 
 // URL of robofleet_server instance (ignored in direct mode)
-static const std::string host_url = "ws://localhost:8080";
+static const std::string server_port = std::getenv("ROBOFLEET_SERVER_PORT");
+static const std::string host_url = "ws://localhost:" + server_port;
 // AMRL Robofleet server URL
 // static const std::string host_url = "ws://10.0.0.1:8080";
 
