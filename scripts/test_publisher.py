@@ -36,7 +36,7 @@ def talker():
     system_log_pub = rospy.Publisher('/leva/systemlog', SystemLog, queue_size=1)
     cacc_status_pub = rospy.Publisher('/leva/caccstatus', CACCStatus, queue_size=1)
     image_pub = rospy.Publisher('/leva/birdseyeview/image_raw/compressed', CompressedImage, queue_size=1)
-    image_filepath = './images/BEVMockup.png'
+    image_filepath = 'images/BEVMockup.png'
     bridge = CvBridge()
 
     rospy.init_node("test_publisher", anonymous=True)
