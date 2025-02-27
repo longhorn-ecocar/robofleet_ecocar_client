@@ -4,6 +4,7 @@ import random
 import rospy
 from roslib.message import get_message_class
 
+from std_msgs.msg import ByteMultiArray
 from sensor_msgs.msg import CompressedImage
 import cv2
 from cv_bridge import CvBridge
@@ -36,12 +37,13 @@ def talker():
     system_log_pub = rospy.Publisher('/leva/systemlog', SystemLog, queue_size=1)
     cacc_status_pub = rospy.Publisher('/leva/caccstatus', CACCStatus, queue_size=1)
     image_pub = rospy.Publisher('/leva/birdseyeview/image_raw/compressed', CompressedImage, queue_size=1)
+    encoded_autera_pub = rospy.Publisher('/rtmaps/autera_tx', ByteMultiArray, queue_size=1)
     image_filepath = './images/BEVMockup.png'
     bridge = CvBridge()
 
     rospy.init_node("test_publisher", anonymous=True)
     rate = rospy.Rate(1)
-
+    
     curr = 0
     while not rospy.is_shutdown():
         t = rospy.get_time() + seed
@@ -114,6 +116,25 @@ def talker():
 
         curr += 1
 
+        # --- Begin: Replicating the dictionary encoding into ByteMultiArray ---
+        # Create the dictionary (same keys as in the C++ code)
+        data_map = {
+            "dyno_mode_req": 1,
+            "dyno_mode_state": 2,
+            "ACC_state": 3
+        }
+        # Serialize the dictionary to a string in the format "key:value;" for each pair
+        serialized_data = ""
+        for key, value in data_map.items():
+            serialized_data += "{}:{};".format(key, value)
+        # Convert the serialized string into a bytearray (UTF-8 encoding)
+        byte_array = bytearray(serialized_data, 'utf-8')
+        # Create and populate the ByteMultiArray message
+        encoded_msg = ByteMultiArray()
+        # Note: ByteMultiArray.data is a list of integers (0-255)
+        encoded_msg.data = list(byte_array)
+        # --- End of dictionary encoding ---
+
         # CACCStatus
         cacc_status_status = CACCStatus()
         cacc_status_status.status = curr % 3
@@ -123,12 +144,17 @@ def talker():
         odom_pub.publish(odom)
         loc_pub.publish(loc)
 
+        ## Autera CAN RT TX
+        encoded_autera_pub.publish(ByteMultiArray(data=[0x01, 0x02, 0x03, 0x04, 0x05]))
+
         # ecocar publishers
         # sensor_health_pub.publish(sensor_health_status)
         system_health_pub.publish(system_health_status)
         system_log_pub.publish(system_log_status)
         cacc_status_pub.publish(cacc_status_status)
         image_pub.publish(compressed_msg)
+        encoded_autera_pub.publish(encoded_msg)
+
 
         rate.sleep()
 

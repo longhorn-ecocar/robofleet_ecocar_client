@@ -10,6 +10,7 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/String.h>
+#include <std_msgs/ByteMultiArray.h>
 
 #include <string>
 
@@ -155,6 +156,10 @@ static void configure_msg_types(RosClientNode& cn) {
   cn.configure(ReceiveRemoteTopic<amrl_msgs::Localization2DMsg>()
                    .from("initialpose")
                    .to("/initialpose"));
+  
+  cn.configure(ReceiveRemoteTopic<std_msgs::ByteMultiArray>()
+                    .from("/autera_tx")
+                    .to(webviz_constants::autera_can_tx_topic));
 
   // Add additional topics to subscribe and publish here.
 }

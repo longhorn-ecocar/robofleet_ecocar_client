@@ -434,3 +434,4 @@ amrl_msgs::ErrorReport decode(const fb::amrl_msgs::ErrorReport* const src) {
   dst.detailed_error_msg = src->detailed_error_msg()->str();
   return dst;
 }
+
