@@ -1,14 +1,15 @@
 #pragma once
 
+#include <amrl_msgs/CACCStatus.h>
+#include <amrl_msgs/ElevatorCommand.h>
 #include <amrl_msgs/Localization2DMsg.h>
 #include <amrl_msgs/RobofleetStatus.h>
 #include <amrl_msgs/RobofleetSubscription.h>
-#include <amrl_msgs/VisualizationMsg.h>
-#include <amrl_msgs/SensorStatus.h>
 #include <amrl_msgs/SensorHealth.h>
+#include <amrl_msgs/SensorStatus.h>
 #include <amrl_msgs/SystemHealth.h>
 #include <amrl_msgs/SystemLog.h>
-#include <amrl_msgs/CACCStatus.h>
+#include <amrl_msgs/VisualizationMsg.h>
 #include <flatbuffers/flatbuffers.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -18,10 +19,12 @@
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <amrl_msgs/ElevatorCommand.h>
 #include <std_msgs/Header.h>
 #include <std_msgs/String.h>
+#include <std_msgs/ByteMultiArray.h>
+
 #include <algorithm>
+
 #include "encode.hpp"
 
 using FBB = flatbuffers::FlatBufferBuilder;
@@ -64,6 +67,18 @@ template <>
 flatbuffers::uoffset_t encode(
     FBB& fbb, const std_msgs::String& msg, const MetadataOffset& metadata) {
   return fb::std_msgs::CreateStringDirect(fbb, metadata, msg.data.c_str()).o;
+}
+
+// std_msgs/ByteMultiArray
+template <>
+flatbuffers::uoffset_t encode(
+    FBB& fbb, const std_msgs::ByteMultiArray& msg,
+    const MetadataOffset& metadata) {
+  return fb::std_msgs::CreateByteMultiArray(
+             fbb,
+             metadata,
+             fbb.CreateVector(msg.data.data(), msg.data.size()))
+      .o;
 }
 
 // geometry_msgs/Point
@@ -129,11 +144,10 @@ flatbuffers::uoffset_t encode(
   return fb::geometry_msgs::CreatePoseWithCovarianceStamped(
              fbb,
              metadata,
-	     encode(fbb, msg.header, 0),
+             encode(fbb, msg.header, 0),
              encode(fbb, msg.pose, 0))
       .o;
 }
-
 
 // geometry_msgs/Vector3
 template <>
@@ -215,9 +229,15 @@ flatbuffers::uoffset_t encode(
     const MetadataOffset& metadata) {
   auto header = encode(fbb, msg.header, 0);
 
-
   return fb::amrl_msgs::CreateSensorStatus(
-             fbb, metadata, header, fbb.CreateString(msg.sensorid), msg.frequency, msg.std, msg.packet_size, msg.status)
+             fbb,
+             metadata,
+             header,
+             fbb.CreateString(msg.sensorid),
+             msg.frequency,
+             msg.std,
+             msg.packet_size,
+             msg.status)
       .o;
 }
 
@@ -230,9 +250,7 @@ flatbuffers::uoffset_t encode(
 
   auto healths = encode_vector<amrl_msgs::SensorStatus>(fbb, 0, msg.healths);
 
-  return fb::amrl_msgs::CreateSensorHealth(
-             fbb, metadata, header, healths)
-      .o;
+  return fb::amrl_msgs::CreateSensorHealth(fbb, metadata, header, healths).o;
 }
 
 // amrl_msgs/SystemHealth
@@ -243,15 +261,21 @@ flatbuffers::uoffset_t encode(
   auto header = encode(fbb, msg.header, 0);
 
   return fb::amrl_msgs::CreateSystemHealth(
-             fbb, metadata, header, msg.pcm_propulsion, msg.pcm_highvoltage, msg.cav_longitudinal, msg.cav_lateral, msg.cav_v2x)
+             fbb,
+             metadata,
+             header,
+             msg.pcm_propulsion,
+             msg.pcm_highvoltage,
+             msg.cav_longitudinal,
+             msg.cav_lateral,
+             msg.cav_v2x)
       .o;
 }
 
 // amrl_msgs/SystemLog
 template <>
 flatbuffers::uoffset_t encode(
-    FBB& fbb, const amrl_msgs::SystemLog& msg,
-    const MetadataOffset& metadata) {
+    FBB& fbb, const amrl_msgs::SystemLog& msg, const MetadataOffset& metadata) {
   auto header = encode(fbb, msg.header, 0);
 
   return fb::amrl_msgs::CreateSystemLog(
@@ -266,9 +290,7 @@ flatbuffers::uoffset_t encode(
     const MetadataOffset& metadata) {
   auto header = encode(fbb, msg.header, 0);
 
-  return fb::amrl_msgs::CreateCACCStatus(
-             fbb, metadata, header, msg.status)
-      .o;
+  return fb::amrl_msgs::CreateCACCStatus(fbb, metadata, header, msg.status).o;
 }
 
 // amrl_msgs/Point2D
@@ -482,8 +504,6 @@ flatbuffers::uoffset_t encode(
     FBB& fbb, const amrl_msgs::ElevatorCommand& msg,
     const MetadataOffset& metadata) {
   return fb::amrl_msgs::CreateElevatorCommand(
-    fbb,
-    metadata,
-    msg.floor_cmd,
-    msg.hold_door).o;
+             fbb, metadata, msg.floor_cmd, msg.hold_door)
+      .o;
 }

@@ -52,14 +52,14 @@ class RosClientNode : public QObject {
   void encode_ros_msg(
       const T& msg, const std::string& msg_type, const std::string& from_topic,
       const std::string& to_topic, const TopicParams& params) {
-
     // encode message
     flatbuffers::FlatBufferBuilder fbb;
     auto metadata = encode_metadata(fbb, msg_type, to_topic);
     auto root_offset = encode<T>(fbb, msg, metadata);
     fbb.Finish(flatbuffers::Offset<void>(root_offset));
-    const QByteArray data{reinterpret_cast<const char*>(fbb.GetBufferPointer()),
-                          static_cast<int>(fbb.GetSize())};
+    const QByteArray data{
+        reinterpret_cast<const char*>(fbb.GetBufferPointer()),
+        static_cast<int>(fbb.GetSize())};
     Q_EMIT ros_message_encoded(
         QString::fromStdString(to_topic),
         data,
@@ -98,16 +98,24 @@ class RosClientNode : public QObject {
           "unique.");
     }
 
-
     if (verbosity_ > 0) {
-      printf("Publishing Local Messages: %s [%s]->%s\n", full_from_topic.c_str(), msg_type.c_str(), full_to_topic.c_str());
+      printf(
+          "Publishing Local Messages: %s [%s]->%s\n",
+          full_from_topic.c_str(),
+          msg_type.c_str(),
+          full_to_topic.c_str());
     }
 
     // create subscription
     // have to use boost function because of how roscpp is implemented
     boost::function<void(T)> subscriber_handler =
         [this, msg_type, full_from_topic, full_to_topic](T msg) {
-          encode_ros_msg<T>(msg, msg_type, full_from_topic, full_to_topic, topic_params[full_from_topic]);
+          encode_ros_msg<T>(
+              msg,
+              msg_type,
+              full_from_topic,
+              full_to_topic,
+              topic_params[full_from_topic]);
         };
     subs[full_from_topic] =
         n.subscribe<T>(full_from_topic, 1, subscriber_handler);
@@ -140,7 +148,11 @@ class RosClientNode : public QObject {
     }
 
     if (verbosity_ > 0) {
-      printf("Receiving Remote Messages: %s [%s]->%s\n", full_from_topic.c_str(), msg_type.c_str(), full_to_topic.c_str());
+      printf(
+          "Receiving Remote Messages: %s [%s]->%s\n",
+          full_from_topic.c_str(),
+          msg_type.c_str(),
+          full_to_topic.c_str());
     }
 
     // create function that will decode and publish a T message to any topic
@@ -166,8 +178,8 @@ class RosClientNode : public QObject {
 
  Q_SIGNALS:
   void ros_message_encoded(
-      const QString& topic, const QByteArray& data, double priority, double rate_limit,
-      bool no_drop);
+      const QString& topic, const QByteArray& data, double priority,
+      double rate_limit, bool no_drop);
 
  public Q_SLOTS:
   /**
@@ -197,7 +209,8 @@ class RosClientNode : public QObject {
     }
 
     if (verbosity_ > 1) {
-      std::cout << "Received message of type " << msg_type << " on topic " << topic << std::endl;
+      std::cout << "Received message of type " << msg_type << " on topic "
+                << topic << std::endl;
     }
 
     pub_fns[msg_type](data, topic);
@@ -225,8 +238,7 @@ class RosClientNode : public QObject {
               .value(),
           "/subscriptions",
           "/subscriptions",
-          params
-      );
+          params);
     }
   }
 
@@ -241,8 +253,10 @@ class RosClientNode : public QObject {
     config.assert_valid();
     register_local_msg_type<T>(config.from, config.to);
     const std::string full_from_topic = ros::names::resolve(config.from);
-    topic_params[full_from_topic] =
-        TopicParams{config.priority, config.rate_limit_hz.is_set() ? config.rate_limit_hz : 0.0, config.no_drop};
+    topic_params[full_from_topic] = TopicParams{
+        config.priority,
+        config.rate_limit_hz.is_set() ? config.rate_limit_hz : 0.0,
+        config.no_drop};
   }
 
   template <typename T>
@@ -251,7 +265,7 @@ class RosClientNode : public QObject {
     register_remote_msg_type<T>(config.from, config.to);
   }
 
-  RosClientNode(int verbosity) : verbosity_(verbosity)  {
+  RosClientNode(int verbosity) : verbosity_(verbosity) {
     // run forever
     spinner.start();
     if (verbosity_ > 0) {

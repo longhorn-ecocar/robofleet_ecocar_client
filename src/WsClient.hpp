@@ -68,8 +68,8 @@ class WsClient : public QObject {
   void send_ping() {
     // reinterprets msg_index as a byte array;
     // endianness is not important since this data is just echoed back as is.
-    const QByteArray msg_index_payload{reinterpret_cast<char*>(&msg_index),
-                                       sizeof(msg_index)};
+    const QByteArray msg_index_payload{
+        reinterpret_cast<char*>(&msg_index), sizeof(msg_index)};
     ws.ping(msg_index_payload);
   }
 

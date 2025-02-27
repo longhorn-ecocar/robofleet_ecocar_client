@@ -3,12 +3,12 @@
 #include <amrl_msgs/RobofleetStatus.h>
 #include <amrl_msgs/RobofleetSubscription.h>
 #include <amrl_msgs/VisualizationMsg.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/CompressedImage.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/String.h>
 
 #include <string>
@@ -54,13 +54,12 @@ static const quint64 direct_mode_bytes_per_sec =
               // speed
 
 /**
-  * Controls the verbosity of the logging to standard output
-  * 0 - Minimal Logging
-  * 1 - Log for subscriptions, new message types, etc.
-  * 2 - Full logging, including indication of every received message
-  */
+ * Controls the verbosity of the logging to standard output
+ * 0 - Minimal Logging
+ * 1 - Log for subscriptions, new message types, etc.
+ * 2 - Full logging, including indication of every received message
+ */
 static const int verbosity = 1;
-
 
 /**
  * @brief Configure which topics and types of messages the client will handle.

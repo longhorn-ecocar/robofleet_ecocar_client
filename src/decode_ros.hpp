@@ -3,16 +3,16 @@
 #include <amrl_msgs/ColoredArc2D.h>
 #include <amrl_msgs/ColoredLine2D.h>
 #include <amrl_msgs/ColoredPoint2D.h>
+#include <amrl_msgs/ElevatorStatus.h>
+#include <amrl_msgs/ErrorReport.h>
 #include <amrl_msgs/Localization2DMsg.h>
 #include <amrl_msgs/PathVisualization.h>
 #include <amrl_msgs/Point2D.h>
 #include <amrl_msgs/Pose2Df.h>
 #include <amrl_msgs/RobofleetStatus.h>
 #include <amrl_msgs/RobofleetSubscription.h>
-#include <amrl_msgs/VisualizationMsg.h>
-#include <amrl_msgs/ElevatorStatus.h>
-#include <amrl_msgs/ErrorReport.h>
 #include <amrl_msgs/SensorStatus.h>
+#include <amrl_msgs/VisualizationMsg.h>
 #include <flatbuffers/flatbuffers.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovariance.h>
@@ -26,8 +26,9 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/String.h>
-#include "decode.hpp"
+#include <std_msgs/ByteMultiArray.h>
 
+#include "decode.hpp"
 
 // *** specializations below ***
 
@@ -53,6 +54,18 @@ template <>
 std_msgs::String decode(const fb::std_msgs::String* const src) {
   std_msgs::String dst;
   dst.data = src->data()->str();
+  return dst;
+}
+
+template <>
+struct flatbuffers_type_for<std_msgs::ByteMultiArray> {
+  typedef fb::std_msgs::ByteMultiArray type;
+};
+template <>
+std_msgs::ByteMultiArray decode(const fb::std_msgs::ByteMultiArray* const src) {
+  std_msgs::ByteMultiArray dst;
+  dst.data.resize(src->data()->size());
+  std::copy(src->data()->begin(), src->data()->end(), dst.data.begin());
   return dst;
 }
 
@@ -211,8 +224,7 @@ struct flatbuffers_type_for<amrl_msgs::SensorStatus> {
   typedef fb::amrl_msgs::SensorStatus type;
 };
 template <>
-amrl_msgs::SensorStatus decode(
-    const fb::amrl_msgs::SensorStatus* const src) {
+amrl_msgs::SensorStatus decode(const fb::amrl_msgs::SensorStatus* const src) {
   amrl_msgs::SensorStatus dst;
   dst.header = decode<std_msgs::Header>(src->header());
   dst.frequency = src->frequency();
@@ -265,7 +277,7 @@ geometry_msgs::PoseWithCovarianceStamped decode(
       src->pose()->covariance()->begin(),
       src->pose()->covariance()->end(),
       dst.pose.covariance.begin());
- 
+
   return dst;
 }
 template <>
@@ -413,13 +425,12 @@ struct flatbuffers_type_for<amrl_msgs::ErrorReport> {
   typedef fb::amrl_msgs::ErrorReport type;
 };
 template <>
-amrl_msgs::ErrorReport decode(
-    const fb::amrl_msgs::ErrorReport* const src) {
+amrl_msgs::ErrorReport decode(const fb::amrl_msgs::ErrorReport* const src) {
   amrl_msgs::ErrorReport dst;
   dst.header = decode<std_msgs::Header>(src->header());
   dst.laser_header = decode<std_msgs::Header>(src->laser_header());
   dst.severity_level = src->severity_level();
   dst.failed_subsystem = src->failed_subsystem();
-  dst.detailed_error_msg =src->detailed_error_msg()->str();
+  dst.detailed_error_msg = src->detailed_error_msg()->str();
   return dst;
 }

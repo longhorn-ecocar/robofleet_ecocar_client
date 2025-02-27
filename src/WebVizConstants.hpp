@@ -66,4 +66,9 @@ static const std::string cacc_status_topic = "cacc_status";
 static const std::string system_log_topic = "system_log";
 static const std::string image_topic = "birdseyeview_image";
 
+/**
+ * @brief (std_msgs/Uint8MultiArray) AUTERA CAN TX data
+ */
+static const std::string autera_can_tx_topic = "autera_can_tx";
+
 }  // namespace webviz_constants

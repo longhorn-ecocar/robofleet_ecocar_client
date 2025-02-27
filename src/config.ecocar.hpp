@@ -1,23 +1,23 @@
 #pragma once
+#include <amrl_msgs/CACCStatus.h>
 #include <amrl_msgs/Localization2DMsg.h>
 #include <amrl_msgs/RobofleetStatus.h>
 #include <amrl_msgs/RobofleetSubscription.h>
-#include <amrl_msgs/VisualizationMsg.h>
 #include <amrl_msgs/SensorHealth.h>
 #include <amrl_msgs/SystemHealth.h>
 #include <amrl_msgs/SystemLog.h>
-#include <amrl_msgs/CACCStatus.h>
+#include <amrl_msgs/VisualizationMsg.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/CompressedImage.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <geometry_msgs/PoseStamped.h>
+#include <std_msgs/ByteMultiArray.h>
 #include <std_msgs/String.h>
 
-#include <string>
-
 #include <cstdlib>
+#include <string>
 
 #include "RosClientNode.hpp"
 #include "WebVizConstants.hpp"
@@ -61,13 +61,12 @@ static const quint64 direct_mode_bytes_per_sec =
               // speed
 
 /**
-  * Controls the verbosity of the logging to standard output
-  * 0 - Minimal Logging
-  * 1 - Log for subscriptions, new message types, etc.
-  * 2 - Full logging, including indication of every received message
-  */
+ * Controls the verbosity of the logging to standard output
+ * 0 - Minimal Logging
+ * 1 - Log for subscriptions, new message types, etc.
+ * 2 - Full logging, including indication of every received message
+ */
 static const int verbosity = 1;
-
 
 /**
  * @brief Configure which topics and types of messages the client will handle.
@@ -113,7 +112,6 @@ static void configure_msg_types(RosClientNode& cn) {
                    .to(webviz_constants::localization_topic)
                    .rate_limit_hz(10)
                    .priority(20));
-
 
   cn.configure(SendLocalTopic<nav_msgs::Odometry>()
                    .from("/odometry/raw")
@@ -185,6 +183,13 @@ static void configure_msg_types(RosClientNode& cn) {
                    .to(webviz_constants::image_topic)
                    .rate_limit_hz(10)
                    .priority(1));
+
+  cn.configure(SendLocalTopic<std_msgs::ByteMultiArray>()
+                   .from("/rtmaps/autera_tx")
+                   .to(webviz_constants::autera_can_tx_topic)
+                   .rate_limit_hz(10)
+                   .priority(20));
+  
   // Add additional topics to subscribe and publish here.
 }
 }  // namespace config

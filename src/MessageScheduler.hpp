@@ -5,11 +5,12 @@
 #include <QString>
 #include <chrono>
 #include <deque>
+#include <functional>
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+
 #include "MessageSchedulerLib.hpp"
-#include <functional>
 #include "config.hpp"
 
 /**
@@ -28,7 +29,8 @@ class MessageScheduler : public QObject {
   }
 
   void setupSchedulerLib(uint64_t mq) {
-    std::function<void(const QByteArray&)> bound_callback(std::bind(&MessageScheduler::scheduling_callback, this, std::placeholders::_1));
+    std::function<void(const QByteArray&)> bound_callback(std::bind(
+        &MessageScheduler::scheduling_callback, this, std::placeholders::_1));
     ms = new MessageSchedulerLib<QByteArray>(mq, bound_callback);
   }
 
@@ -41,9 +43,10 @@ class MessageScheduler : public QObject {
 
  public Q_SLOTS:
   void enqueue(
-      const QString& topic, const QByteArray& data, double priority, double rate_limit,
-      bool no_drop) {
-    ms->enqueue(topic.toUtf8().constData(), data, priority, rate_limit, no_drop);
+      const QString& topic, const QByteArray& data, double priority,
+      double rate_limit, bool no_drop) {
+    ms->enqueue(
+        topic.toUtf8().constData(), data, priority, rate_limit, no_drop);
   }
 
   /**
