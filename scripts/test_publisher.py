@@ -11,6 +11,22 @@ from cv_bridge import CvBridge
 
 seed = random.random() * 100000
 
+def autera_rx_callback(data):
+    # Decode the received ByteMultiArray message to dictionary
+    # Note: ByteMultiArray.data is a list of integers (0-255)
+    received_data = bytearray(data.data).decode('utf-8')
+    # Split the received string by the delimiter ";"
+    received_data = received_data.split(";")
+    # Create a dictionary to store the key-value pairs
+    received_dict = {}
+    for pair in received_data:
+        # Split each pair by the delimiter ":"
+        key, value = pair.split(":")
+        # Store the key-value pair in the dictionary
+        received_dict[key] = value
+    # Print the received dictionary
+    rospy.loginfo("Received data: {}".format(received_dict))
+
 def talker():
     # avoid that whole "make a ROS package" issue
     # make sure ROS_PACKAGE_PATH contains amrl_msgs
@@ -26,6 +42,8 @@ def talker():
     SystemHealth = get_message_class("amrl_msgs/SystemHealth")
     SystemLog = get_message_class("amrl_msgs/SystemLog")
     CACCStatus = get_message_class("amrl_msgs/CACCStatus")
+
+    rospy.Subscriber('/leva/autera_rx', ByteMultiArray, autera_rx_callback)
 
     status_pub = rospy.Publisher("status", RobofleetStatus, queue_size=1)
     odom_pub = rospy.Publisher("odometry/raw", Odometry, queue_size=1)
@@ -119,9 +137,9 @@ def talker():
         # --- Begin: Replicating the dictionary encoding into ByteMultiArray ---
         # Create the dictionary (same keys as in the C++ code)
         data_map = {
-            "dyno_mode_req": 1,
-            "dyno_mode_state": 2,
-            "ACC_state": 3
+            "dyno_mode_req": random.randint(0, 2),  # Random between 0-2
+            "dyno_mode_state": random.randint(0, 2),
+            "ACC_state": random.randint(0, 1)
         }
         # Serialize the dictionary to a string in the format "key:value;" for each pair
         serialized_data = ""
@@ -145,7 +163,6 @@ def talker():
         loc_pub.publish(loc)
 
         ## Autera CAN RT TX
-        encoded_autera_pub.publish(ByteMultiArray(data=[0x01, 0x02, 0x03, 0x04, 0x05]))
 
         # ecocar publishers
         # sensor_health_pub.publish(sensor_health_status)
@@ -154,7 +171,6 @@ def talker():
         cacc_status_pub.publish(cacc_status_status)
         image_pub.publish(compressed_msg)
         encoded_autera_pub.publish(encoded_msg)
-
 
         rate.sleep()
 

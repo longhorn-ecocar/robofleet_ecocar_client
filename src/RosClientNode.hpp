@@ -242,6 +242,36 @@ class RosClientNode : public QObject {
     }
   }
 
+  // Add a new template method to register a remote command type.
+  template <typename T>
+  void register_remote_command(
+      const std::string& from_topic, const std::string& to_topic) {
+    // Resolve full topic names.
+    const std::string full_from_topic = ros::names::resolve(from_topic);
+    const std::string full_to_topic = ros::names::resolve(to_topic);
+    const std::string& msg_type = ros::message_traits::DataType<T>().value();
+
+    // Advertise a local publisher for commands.
+    if (pubs.count(full_to_topic) == 0) {
+      pubs[full_to_topic] = n.advertise<T>(full_to_topic, 1);
+    }
+
+    // Create a function that decodes the remote command and publishes it
+    // locally. (This is similar to what register_remote_msg_type does.)
+    if (pub_fns.count(msg_type) == 0) {
+      pub_fns[msg_type] = [this, full_to_topic](
+                              const QByteArray& data,
+                              const std::string& msg_type) {
+        const auto* root =
+            flatbuffers::GetRoot<typename flatbuffers_type_for<T>::type>(
+                data.data());
+        T msg = decode<T>(root);
+        // Publish locally on the "to" topic.
+        pubs[full_to_topic].publish(msg);
+      };
+    }
+  }
+
   /**
    * @brief Register new listeners based on the given topic configuration.
    */

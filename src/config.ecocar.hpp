@@ -158,6 +158,23 @@ static void configure_msg_types(RosClientNode& cn) {
                    .to("/initialpose"));
 
   // ecocar
+
+  // cn.configure(ReceiveRemoteTopic<std_msgs::ByteMultiArray>()
+  //                  .from("autera_rx")
+  //                  .to("/autera_rx"));
+  // Both are necessary for transmitting CAN messages to external nodes
+  cn.configure(SendLocalTopic<std_msgs::ByteMultiArray>()
+                   .from("autera_rx")
+                   .to("/leva/autera_rx")
+                   .rate_limit_hz(10)
+                   .priority(20));
+
+  cn.register_remote_command<std_msgs::ByteMultiArray>(
+      "autera_rx",       // remote topic from the web server
+      "/leva/autera_rx"  // local topic to publish to
+                         // external nodes
+  );
+
   cn.configure(SendLocalTopic<amrl_msgs::SensorHealth>()
                    .from("/leva/sensorhealth")
                    .to(webviz_constants::sensor_health_topic)
@@ -189,7 +206,7 @@ static void configure_msg_types(RosClientNode& cn) {
                    .to(webviz_constants::autera_can_tx_topic)
                    .rate_limit_hz(10)
                    .priority(20));
-  
+
   // Add additional topics to subscribe and publish here.
 }
 }  // namespace config
