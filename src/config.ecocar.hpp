@@ -163,13 +163,13 @@ static void configure_msg_types(RosClientNode& cn) {
   //                  .from("autera_rx")
   //                  .to("/autera_rx"));
   // Both are necessary for transmitting CAN messages to external nodes
-  cn.configure(SendLocalTopic<std_msgs::ByteMultiArray>()
+  cn.configure(SendLocalTopic<std_msgs::String>()
                    .from("autera_rx")
                    .to("/leva/autera_rx")
                    .rate_limit_hz(10)
                    .priority(20));
 
-  cn.register_remote_command<std_msgs::ByteMultiArray>(
+  cn.register_remote_command<std_msgs::String>(
       "autera_rx",       // remote topic from the web server
       "/leva/autera_rx"  // local topic to publish to
                          // external nodes
@@ -201,8 +201,8 @@ static void configure_msg_types(RosClientNode& cn) {
                    .rate_limit_hz(10)
                    .priority(1));
 
-  cn.configure(SendLocalTopic<std_msgs::ByteMultiArray>()
-                   .from("/rtmaps/autera_tx")
+  cn.configure(SendLocalTopic<std_msgs::String>()
+                   .from("/leva/autera_tx")
                    .to(webviz_constants::autera_can_tx_topic)
                    .rate_limit_hz(10)
                    .priority(20));
