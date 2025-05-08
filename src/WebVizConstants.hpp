@@ -71,4 +71,14 @@ static const std::string image_topic = "birdseyeview_image";
  */
 static const std::string autera_can_tx_topic = "autera_can_tx";
 
+/**
+ * @brief (std_msgs/Uint8MultiArray) AUTERA CAN RX data
+ */
+static const std::string autera_can_rx_topic = "autera_can_rx";
+
+/**
+ * @brief (std_msgs/String) AUTERA EVC CAN TX data
+ */
+static const std::string autera_evccan_tx_topic = "autera_evccan_tx";
+
 }  // namespace webviz_constants

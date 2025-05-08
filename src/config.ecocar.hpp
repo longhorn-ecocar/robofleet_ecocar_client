@@ -94,80 +94,98 @@ static void configure_msg_types(RosClientNode& cn) {
   // Read all of the above documentation before modifying
 
   // must send to status topic to list robot in webviz
-  cn.configure(SendLocalTopic<amrl_msgs::RobofleetStatus>()
-                   .from("/status")
-                   .to(webviz_constants::status_topic)
-                   .rate_limit_hz(1));
+  cn.configure(
+      SendLocalTopic<amrl_msgs::RobofleetStatus>()
+          .from("/status")
+          .to(webviz_constants::status_topic)
+          .rate_limit_hz(1));
 
   // must send to subscriptions topic to receive messages from other robots
   // don't drop or rate limit this topic.
-  cn.configure(SendLocalTopic<amrl_msgs::RobofleetSubscription>()
-                   .from("/subscriptions")
-                   .to(webviz_constants::subscriptions_topic)
-                   .no_drop(true));
+  cn.configure(
+      SendLocalTopic<amrl_msgs::RobofleetSubscription>()
+          .from("/subscriptions")
+          .to(webviz_constants::subscriptions_topic)
+          .no_drop(true));
 
   // send messages for webviz
-  cn.configure(SendLocalTopic<amrl_msgs::Localization2DMsg>()
-                   .from("/localization")
-                   .to(webviz_constants::localization_topic)
-                   .rate_limit_hz(10)
-                   .priority(20));
+  cn.configure(
+      SendLocalTopic<amrl_msgs::Localization2DMsg>()
+          .from("/localization")
+          .to(webviz_constants::localization_topic)
+          .rate_limit_hz(10)
+          .priority(20));
 
-  cn.configure(SendLocalTopic<nav_msgs::Odometry>()
-                   .from("/odometry/raw")
-                   .to(webviz_constants::odometry_topic)
-                   .rate_limit_hz(15)
-                   .priority(20));
+  cn.configure(
+      SendLocalTopic<nav_msgs::Odometry>()
+          .from("/odometry/raw")
+          .to(webviz_constants::odometry_topic)
+          .rate_limit_hz(15)
+          .priority(20));
 
-  cn.configure(SendLocalTopic<sensor_msgs::LaserScan>()
-                   .from("/velodyne_2dscan")
-                   .to(webviz_constants::lidar_2d_topic)
-                   .rate_limit_hz(15)
-                   .priority(2));
+  cn.configure(
+      SendLocalTopic<sensor_msgs::LaserScan>()
+          .from("/velodyne_2dscan")
+          .to(webviz_constants::lidar_2d_topic)
+          .rate_limit_hz(15)
+          .priority(2));
 
-  cn.configure(SendLocalTopic<sensor_msgs::PointCloud2>()
-                   .from("/velodyne_points")
-                   .to(webviz_constants::point_cloud_topic)
-                   .rate_limit_hz(10)
-                   .priority(1));
+  cn.configure(
+      SendLocalTopic<sensor_msgs::PointCloud2>()
+          .from("/velodyne_points")
+          .to(webviz_constants::point_cloud_topic)
+          .rate_limit_hz(10)
+          .priority(1));
 
-  cn.configure(SendLocalTopic<sensor_msgs::CompressedImage>()
-                   .from("/stereo/left/image_raw/compressed")
-                   .to(webviz_constants::compressed_image_prefix + "left")
-                   .rate_limit_hz(10)
-                   .priority(1));
-  cn.configure(SendLocalTopic<sensor_msgs::CompressedImage>()
-                   .from("/stereo/right/image_raw/compressed")
-                   .to(webviz_constants::compressed_image_prefix + "right")
-                   .rate_limit_hz(10)
-                   .priority(1));
+  cn.configure(
+      SendLocalTopic<sensor_msgs::CompressedImage>()
+          .from("/stereo/left/image_raw/compressed")
+          .to(webviz_constants::compressed_image_prefix + "left")
+          .rate_limit_hz(10)
+          .priority(1));
+  cn.configure(
+      SendLocalTopic<sensor_msgs::CompressedImage>()
+          .from("/stereo/right/image_raw/compressed")
+          .to(webviz_constants::compressed_image_prefix + "right")
+          .rate_limit_hz(10)
+          .priority(1));
 
-  cn.configure(SendLocalTopic<amrl_msgs::VisualizationMsg>()
-                   .from("/visualization")
-                   .to(webviz_constants::visualization_topic)
-                   .rate_limit_hz(10)
-                   .priority(2));
+  cn.configure(
+      SendLocalTopic<amrl_msgs::VisualizationMsg>()
+          .from("/visualization")
+          .to(webviz_constants::visualization_topic)
+          .rate_limit_hz(10)
+          .priority(2));
 
   // receive remote commands
-  cn.configure(ReceiveRemoteTopic<geometry_msgs::PoseStamped>()
-                   .from("move_base_simple/goal")
-                   .to("/move_base_simple/goal"));
+  cn.configure(
+      ReceiveRemoteTopic<geometry_msgs::PoseStamped>()
+          .from("move_base_simple/goal")
+          .to("/move_base_simple/goal"));
 
-  cn.configure(ReceiveRemoteTopic<amrl_msgs::Localization2DMsg>()
-                   .from("initialpose")
-                   .to("/initialpose"));
+  cn.configure(
+      ReceiveRemoteTopic<amrl_msgs::Localization2DMsg>()
+          .from("initialpose")
+          .to("/initialpose"));
 
   // ecocar
 
-  // cn.configure(ReceiveRemoteTopic<std_msgs::ByteMultiArray>()
-  //                  .from("autera_rx")
-  //                  .to("/autera_rx"));
+  // cn.configure(
+  //     ReceiveRemoteTopic<std_msgs::String>()
+  //         .from("autera_rx")
+  //         .to(webviz_constants::autera_can_rx_topic));
+
+  // cn.configure(
+  //     ReceiveRemoteTopic<std_msgs::String>()
+  //         .from(webviz_constants::autera_can_rx_topic)
+  //         .to("/autera_rx"));
   // Both are necessary for transmitting CAN messages to external nodes
-  cn.configure(SendLocalTopic<std_msgs::String>()
-                   .from("autera_rx")
-                   .to("/leva/autera_rx")
-                   .rate_limit_hz(10)
-                   .priority(20));
+  cn.configure(
+      SendLocalTopic<std_msgs::String>()
+          .from(webviz_constants::autera_can_rx_topic)
+          .to("/leva/autera_rx")
+          .rate_limit_hz(10)
+          .priority(20));
 
   cn.register_remote_command<std_msgs::String>(
       "autera_rx",       // remote topic from the web server
@@ -175,37 +193,49 @@ static void configure_msg_types(RosClientNode& cn) {
                          // external nodes
   );
 
-  cn.configure(SendLocalTopic<amrl_msgs::SensorHealth>()
-                   .from("/leva/sensorhealth")
-                   .to(webviz_constants::sensor_health_topic)
-                   .rate_limit_hz(10)
-                   .priority(20));
-  cn.configure(SendLocalTopic<amrl_msgs::SystemHealth>()
-                   .from("/leva/systemhealth")
-                   .to(webviz_constants::system_health_topic)
-                   .rate_limit_hz(10)
-                   .priority(20));
-  cn.configure(SendLocalTopic<amrl_msgs::SystemLog>()
-                   .from("/leva/systemlog")
-                   .to(webviz_constants::system_log_topic)
-                   .rate_limit_hz(10)
-                   .priority(20));
-  cn.configure(SendLocalTopic<amrl_msgs::CACCStatus>()
-                   .from("/leva/caccstatus")
-                   .to(webviz_constants::cacc_status_topic)
-                   .rate_limit_hz(10)
-                   .priority(20));
-  cn.configure(SendLocalTopic<sensor_msgs::CompressedImage>()
-                   .from("/leva/birdseyeview/image_raw/compressed")
-                   .to(webviz_constants::image_topic)
-                   .rate_limit_hz(10)
-                   .priority(1));
+  cn.configure(
+      SendLocalTopic<amrl_msgs::SensorHealth>()
+          .from("/leva/sensorhealth")
+          .to(webviz_constants::sensor_health_topic)
+          .rate_limit_hz(10)
+          .priority(20));
+  cn.configure(
+      SendLocalTopic<amrl_msgs::SystemHealth>()
+          .from("/leva/systemhealth")
+          .to(webviz_constants::system_health_topic)
+          .rate_limit_hz(10)
+          .priority(20));
+  cn.configure(
+      SendLocalTopic<amrl_msgs::SystemLog>()
+          .from("/leva/systemlog")
+          .to(webviz_constants::system_log_topic)
+          .rate_limit_hz(10)
+          .priority(20));
+  cn.configure(
+      SendLocalTopic<amrl_msgs::CACCStatus>()
+          .from("/leva/caccstatus")
+          .to(webviz_constants::cacc_status_topic)
+          .rate_limit_hz(10)
+          .priority(20));
+  cn.configure(
+      SendLocalTopic<sensor_msgs::CompressedImage>()
+          .from("/leva/birdseyeview/image_raw/compressed")
+          .to(webviz_constants::image_topic)
+          .rate_limit_hz(10)
+          .priority(1));
 
-  cn.configure(SendLocalTopic<std_msgs::String>()
-                   .from("/leva/autera_tx")
-                   .to(webviz_constants::autera_can_tx_topic)
-                   .rate_limit_hz(10)
-                   .priority(20));
+  cn.configure(
+      SendLocalTopic<std_msgs::String>()
+          .from("/leva/autera_tx")
+          .to(webviz_constants::autera_can_tx_topic)
+          .rate_limit_hz(10)
+          .priority(20));
+  cn.configure(
+      SendLocalTopic<std_msgs::String>()
+          .from(webviz_constants::autera_evccan_tx_topic)
+          .to("/leva/autera_evccan_tx")
+          .rate_limit_hz(10)
+          .priority(20));
 
   // Add additional topics to subscribe and publish here.
 }

@@ -4,27 +4,32 @@ import random
 import rospy
 from roslib.message import get_message_class
 
-from std_msgs.msg import ByteMultiArray
+from std_msgs.msg import String
 from sensor_msgs.msg import CompressedImage
 import cv2
 from cv_bridge import CvBridge
 
 seed = random.random() * 100000
 
+def serialize_dict(data_map):
+    # Serialize the dictionary to a string in the format "key:value;" for each pair
+    serialized_data = ""
+    for key, value in data_map.items():
+        serialized_data += "{}:{};".format(key, value)
+    return serialized_data
+
 def autera_rx_callback(data):
-    # Decode the received ByteMultiArray message to dictionary
-    # Note: ByteMultiArray.data is a list of integers (0-255)
-    received_data = bytearray(data.data).decode('utf-8')
-    # Split the received string by the delimiter ";"
-    received_data = received_data.split(";")
+    # Assume data is directly a string (no decoding necessary)
+    received_data = data.data.split(";")
+
     # Create a dictionary to store the key-value pairs
     received_dict = {}
     for pair in received_data:
-        # Split each pair by the delimiter ":"
-        key, value = pair.split(":")
-        # Store the key-value pair in the dictionary
-        received_dict[key] = value
-    # Print the received dictionary
+        if ":" in pair:  # Safety check in case of malformed pairs
+            key, value = pair.split(":", 1)
+            received_dict[key] = value
+
+    # Log the received dictionary
     rospy.loginfo("Received data: {}".format(received_dict))
 
 def talker():
@@ -43,7 +48,7 @@ def talker():
     SystemLog = get_message_class("amrl_msgs/SystemLog")
     CACCStatus = get_message_class("amrl_msgs/CACCStatus")
 
-    rospy.Subscriber('/leva/autera_rx', ByteMultiArray, autera_rx_callback)
+    rospy.Subscriber('/leva/autera_rx', String, autera_rx_callback)
 
     status_pub = rospy.Publisher("status", RobofleetStatus, queue_size=1)
     odom_pub = rospy.Publisher("odometry/raw", Odometry, queue_size=1)
@@ -55,7 +60,8 @@ def talker():
     system_log_pub = rospy.Publisher('/leva/systemlog', SystemLog, queue_size=1)
     cacc_status_pub = rospy.Publisher('/leva/caccstatus', CACCStatus, queue_size=1)
     image_pub = rospy.Publisher('/leva/birdseyeview/image_raw/compressed', CompressedImage, queue_size=1)
-    encoded_autera_pub = rospy.Publisher('/rtmaps/autera_tx', ByteMultiArray, queue_size=1)
+    encoded_autera_pub = rospy.Publisher('/leva/autera_tx', String, queue_size=1)
+    encoded_autera_evccan_pub = rospy.Publisher('/leva/autera_evccan_tx', String, queue_size=1)
     image_filepath = './images/BEVMockup.png'
     bridge = CvBridge()
 
@@ -139,18 +145,24 @@ def talker():
         data_map = {
             "dyno_mode_req": random.randint(0, 2),  # Random between 0-2
             "dyno_mode_state": random.randint(0, 2),
-            "ACC_state": random.randint(0, 1)
+            "ACC_state": random.randint(0, 1),
+            'vehicle_ahead' : random.randint(0, 1),
+            'vehicle_headway': random.uniform(0, 100),
+            'traffic_light_state': random.randint(0, 2),
+            'CACC_mileage': random.uniform(0, 100),
+            'AIN_state': random.randint(0, 2),
+            'LCC_state': random.randint(0, 2),
+            'AP_state': random.randint(0, 2),
+            'DMS_state': random.randint(0, 2),
+            'udp_byte_count': random.uniform(0, 100),
+            'simulation_active': random.randint(0, 1),
         }
-        # Serialize the dictionary to a string in the format "key:value;" for each pair
-        serialized_data = ""
-        for key, value in data_map.items():
-            serialized_data += "{}:{};".format(key, value)
-        # Convert the serialized string into a bytearray (UTF-8 encoding)
-        byte_array = bytearray(serialized_data, 'utf-8')
+        serialized_data = serialize_dict(data_map)
+
         # Create and populate the ByteMultiArray message
-        encoded_msg = ByteMultiArray()
+        encoded_msg = String()
         # Note: ByteMultiArray.data is a list of integers (0-255)
-        encoded_msg.data = list(byte_array)
+        encoded_msg.data = serialized_data
         # --- End of dictionary encoding ---
 
         # CACCStatus
@@ -171,6 +183,23 @@ def talker():
         cacc_status_pub.publish(cacc_status_status)
         image_pub.publish(compressed_msg)
         encoded_autera_pub.publish(encoded_msg)
+
+        ## Autera EVCCAN TX
+        data_map = {
+            'pwr_flow': random.uniform(0, 100),
+            'hv_bat_soc': random.uniform(0,12),
+            'hv_bat_temp': random.uniform(0, 20),
+            'edu_temp': random.uniform(0, 20),
+            'drv_mod': random.randint(0, 2),
+        }
+        serialized_data = serialize_dict(data_map)
+
+        # Create and populate String message
+        encoded_msg = String()
+        # Note: ByteMultiArray.data is a list of integers (0-255)
+        encoded_msg.data = serialized_data
+        # --- End of dictionary encoding ---
+        encoded_autera_evccan_pub.publish(encoded_msg)
 
         rate.sleep()
 
