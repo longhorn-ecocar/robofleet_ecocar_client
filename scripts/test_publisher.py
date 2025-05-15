@@ -186,10 +186,11 @@ def talker():
 
         ## Autera EVCCAN TX
         data_map = {
-            'pwr_flow': random.uniform(0, 100),
+            'motorspeed': random.uniform(0, 100),
+            'motortorque': random.uniform(0, 100),
+            'inversetemp': random.uniform(0, 20),
             'hv_bat_soc': random.uniform(0,12),
             'hv_bat_temp': random.uniform(0, 20),
-            'edu_temp': random.uniform(0, 20),
             'drv_mod': random.randint(0, 2),
         }
         serialized_data = serialize_dict(data_map)
