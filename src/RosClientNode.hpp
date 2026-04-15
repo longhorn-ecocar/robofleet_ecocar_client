@@ -35,6 +35,9 @@ class RosClientNode : public QObject {
   std::unordered_map<
       MsgTypeString, std::function<void(const QByteArray&, const TopicString&)>>
       pub_fns;
+  std::unordered_map<
+      TopicString, std::function<void(const QByteArray&, const TopicString&)>>
+      pub_fns_by_topic;
 
   const int verbosity_;
 
@@ -70,8 +73,8 @@ class RosClientNode : public QObject {
 
   template <typename T>
   void publish_ros_msg(
-      const T& msg, const std::string& msg_type, const std::string& to_topic) {
-    pubs[msg_type].publish(msg);
+      const T& msg, const std::string& to_topic) {
+    pubs[to_topic].publish(msg);
   }
   /**
    * @brief Set up pub/sub for a particular message type and topic.
@@ -155,22 +158,24 @@ class RosClientNode : public QObject {
           full_to_topic.c_str());
     }
 
-    // create function that will decode and publish a T message to any topic
+    // create function that will decode and publish a T message.
+    auto publish_fn = [this, full_to_topic](
+                          const QByteArray& data,
+                          const std::string&) {
+      const auto* root =
+          flatbuffers::GetRoot<typename flatbuffers_type_for<T>::type>(
+              data.data());
+      const T msg = decode<T>(root);
+      publish_ros_msg<T>(msg, full_to_topic);
+    };
+    pub_fns_by_topic[full_from_topic] = publish_fn;
     if (pub_fns.count(msg_type) == 0) {
-      pub_fns[msg_type] = [this, full_to_topic](
-                              const QByteArray& data,
-                              const std::string& msg_type) {
-        const auto* root =
-            flatbuffers::GetRoot<typename flatbuffers_type_for<T>::type>(
-                data.data());
-        const T msg = decode<T>(root);
-        publish_ros_msg<T>(msg, msg_type, full_to_topic);
-      };
+      pub_fns[msg_type] = publish_fn;
     }
 
     // Set up publishers for these remote messages
-    if (pubs.count(full_from_topic) == 0) {
-      pubs[full_from_topic] = n.advertise<T>(full_to_topic, 1);
+    if (pubs.count(full_to_topic) == 0) {
+      pubs[full_to_topic] = n.advertise<T>(full_to_topic, 1);
     }
 
     pub_remote_topics.push_back(full_from_topic);
@@ -195,7 +200,20 @@ class RosClientNode : public QObject {
     const std::string& msg_type = msg->__metadata()->type()->str();
     const std::string& topic = msg->__metadata()->topic()->str();
 
-    // try to publish
+    // try to publish by topic first (supports multiple topics of same type)
+    if (pub_fns_by_topic.count(topic) > 0) {
+      pub_fns_by_topic[topic](data, topic);
+      return;
+    }
+    if (!topic.empty() && topic[0] != '/') {
+      const std::string normalized_topic = "/" + topic;
+      if (pub_fns_by_topic.count(normalized_topic) > 0) {
+        pub_fns_by_topic[normalized_topic](data, normalized_topic);
+        return;
+      }
+    }
+
+    // fallback to message-type handlers
     if (pub_fns.count(msg_type) == 0) {
       // if you get this unexpectedly, ensure that:
       // 1) you have registered the message type you intend to receive in your
@@ -227,7 +245,11 @@ class RosClientNode : public QObject {
       // Now, subscribe to the appropriate remote message
       amrl_msgs::RobofleetSubscription sub_msg;
       sub_msg.action = amrl_msgs::RobofleetSubscription::ACTION_SUBSCRIBE;
-      sub_msg.topic_regex = topic;
+      if (!topic.empty() && topic[0] == '/') {
+        sub_msg.topic_regex = "^/?" + topic.substr(1) + "$";
+      } else {
+        sub_msg.topic_regex = "^" + topic + "$";
+      }
       TopicParams params;
       params.no_drop = true;
       params.priority = 1.0;
@@ -258,18 +280,21 @@ class RosClientNode : public QObject {
 
     // Create a function that decodes the remote command and publishes it
     // locally. (This is similar to what register_remote_msg_type does.)
+    auto publish_fn = [this, full_to_topic](
+                          const QByteArray& data,
+                          const std::string&) {
+      const auto* root =
+          flatbuffers::GetRoot<typename flatbuffers_type_for<T>::type>(
+              data.data());
+      T msg = decode<T>(root);
+      // Publish locally on the "to" topic.
+      pubs[full_to_topic].publish(msg);
+    };
+    pub_fns_by_topic[full_from_topic] = publish_fn;
     if (pub_fns.count(msg_type) == 0) {
-      pub_fns[msg_type] = [this, full_to_topic](
-                              const QByteArray& data,
-                              const std::string& msg_type) {
-        const auto* root =
-            flatbuffers::GetRoot<typename flatbuffers_type_for<T>::type>(
-                data.data());
-        T msg = decode<T>(root);
-        // Publish locally on the "to" topic.
-        pubs[full_to_topic].publish(msg);
-      };
+      pub_fns[msg_type] = publish_fn;
     }
+    pub_remote_topics.push_back(full_from_topic);
   }
 
   /**

@@ -188,7 +188,7 @@ static void configure_msg_types(RosClientNode& cn) {
           .priority(20));
 
   cn.register_remote_command<std_msgs::String>(
-      "autera_rx",       // remote topic from the web server
+      webviz_constants::autera_can_rx_topic,  // remote topic from the web server
       "/leva/autera_rx"  // local topic to publish to
                          // external nodes
   );
